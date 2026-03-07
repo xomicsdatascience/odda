@@ -2,6 +2,15 @@
 
 ODDA uses AI agents and MCP (Model Context Protocol) servers to parse scientific articles, extract metadata, download omics datasets, and run quantification pipelines. It provides an end-to-end workflow from literature discovery to data analysis.
 
+## Table of Contents
+
+- [Architecture](#architecture)
+- [Expected Data Layout](#expected-data-layout)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [License](#license)
+
 ## Architecture
 
 The system is composed of **MCP servers** that expose tool endpoints and **agents** that orchestrate multi-step tasks by calling those tools.
