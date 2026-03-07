@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "diann": {
+      "command": ".venv/bin/python3.11",
+      "args": ["./odda_diann/src/odda_diann/run_diann.py"]
+    },
+    "odda_utils":{
+      "command": ".venv/bin/python3.11",
+      "args": ["./odda_utils/src/odda_utils/main.py"]
+   },
+   "maxquant": {
+        "command": ".venv/bin/python3.11",
+	"args": ["./odda_maxquant/src/odda_maxquant/run_maxquant.py"]
+   },
+   "thermofisher": {
+      "command": ".venv/bin/python3.11",
+      "args": ["./odda_thermofisher/src/odda_thermofisher/run_thermofisher.py"]
+  }
+ }
+}

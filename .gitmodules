@@ -1,0 +1,15 @@
+[submodule "odda_thermofisher"]
+	path = odda_thermofisher
+	url = git@github.com:xomicsdatascience/odda_thermofisher.git
+[submodule "odda_maxquant"]
+	path = odda_maxquant
+	url = git@github.com:xomicsdatascience/odda_maxquant.git
+[submodule "odda_diann"]
+	path = odda_diann
+	url = git@github.com:xomicsdatascience/odda_diann
+[submodule "request_visualization"]
+	path = request_visualization
+	url = git@github.com:xomicsdatascience/request_visualization
+[submodule "odda_utils"]
+	path = odda_utils
+	url = git@github.com:xomicsdatascience/odda_utils.git
