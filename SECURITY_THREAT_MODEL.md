@@ -3,10 +3,12 @@
 This document is the security response requested by **Reviewer 3, point 2**. It
 states the trust boundaries of the ODDA system, enumerates the attack surface
 and the concrete attacks we tested, describes the mitigations that are in place
-(including the deterministic injection-telemetry tool now exposed by the MCP
-server), and specifies the sandbox required for the one genuinely
-code-executing stage. It is written to be integrated into the paper's Methods
-and Discussion; the reproducible tooling it describes lives in the repository.
+(including the deterministic injection-telemetry tool and the least-privilege
+execution sandbox now exposed by the MCP server), and documents the sandbox
+that confines the one genuinely code-executing stage. It is written to be
+integrated into the paper's Methods and Discussion; the reproducible tooling it
+describes lives in the repository (`odda_utils.sandbox` / the `run_analysis`
+MCP tool, with the container defined in `odda_utils/static/apptainer/analysis.def`).
 
 ---
 
@@ -81,8 +83,10 @@ definitions, its database, or its MCP tool code. The attacker's goal is one of:
 3. **Downstream verification.** Identifiers and cross-references are validated
    against the source repositories; fabricated or mismatched IDs fail closed.
 4. **Constrained tool surface.** The agent acts only through a fixed set of
-   reviewed MCP tools with typed arguments and resource limits, and executes
-   analyses only inside Apptainer containers — there is no general shell.
+   reviewed MCP tools with typed arguments. Quantification runs in prebuilt
+   tool containers, and analysis/synthesis code derived from article text
+   executes only through the `run_analysis` sandbox (Section 5) — not on the
+   host, and not via a general shell.
 5. **Deterministic injection telemetry (new; `scan_injection` /
    `scan_injection_batch`).** A pure, side-effect-free tool scans each piece of
    untrusted text (main text and every supplemental file) for instruction-like
@@ -99,31 +103,55 @@ definitions, its database, or its MCP tool code. The attacker's goal is one of:
    positives (e.g. a Methods section that literally discusses a "system prompt")
    are harmless because it gates review rather than any automated action.
 
-## 5. The synthesis sandbox (specification for the highest-risk stage)
+## 5. The synthesis sandbox (implemented: the `run_analysis` tool)
 
-Code produced at cross-study synthesis must be treated as untrusted until a
-human has read it. The specified execution environment is:
+Code produced at cross-study synthesis / downstream analysis must be treated as
+untrusted until a human has read it. This is implemented as the `run_analysis`
+MCP tool on the `odda_utils` server (`odda_utils/sandbox.py`), which is the only
+sanctioned way to execute such code; the `omics-analyzer` agent is instructed to
+use it and never to run analysis code on the host. Each run:
 
-- **Container isolation.** Run in an Apptainer container with no new
-  privileges, a read-only root filesystem, and a single writable scratch mount
-  scoped to the run's working directory.
-- **No network.** Network egress disabled by default (`--net --network none`),
-  which neutralizes the exfiltration and download-and-run categories that the
-  telemetry flags; any required inputs are staged in beforehand.
-- **Least-privilege data access.** Bind-mount only the specific dataset(s) under
-  analysis, read-only where possible; no access to credentials
-  (`.claude/azure.key`, `azure.endpoint`), other datasets, or the database.
-- **Resource limits.** CPU, memory, wall-clock, and output-size caps enforced by
-  the execution tool.
-- **Mandatory human review.** Synthesized analysis code is surfaced for
-  inspection before execution — for scientific correctness as much as security.
-  The `scan_injection` signal over the source article prioritizes which
-  syntheses need the closest look.
+- **Container isolation.** Runs in an Apptainer container (`analysis.def`:
+  Python + the scientific-analysis stack only) with `--containall` and
+  `--no-home`, so there are no host filesystems, a clean environment, isolated
+  PID/IPC namespaces, and no `$HOME` mount. The SIF root filesystem is
+  read-only; the only writable path is a single scratch bind — the run's working
+  directory at `/work`.
+- **No network.** Launched with `--net --network none`. Verified to work
+  unprivileged on the reference host (Apptainer 1.5.2). If a host cannot create
+  an isolated network namespace unprivileged, the run **fails closed** (the
+  container does not start) rather than falling back to host networking; the
+  operator must explicitly pass `allow_network=True` to override, which is not
+  recommended for untrusted code.
+- **Least-privilege data access.** Only the datasets named for the run are
+  bind-mounted, read-only, under `/data/in/<name>`. Paths that resolve to a
+  credential or database location (`.claude/`, `*.key`, `*.endpoint`, `*.sqlite`)
+  are refused outright, so the database and credentials are never mounted.
+- **Resource limits.** CPU-time (`ulimit -t`), address space (`ulimit -v`), and
+  per-file size (`ulimit -f`) caps are applied inside the container before the
+  interpreter starts — a mechanism that does not depend on host cgroups, which
+  are unreliable on the deployment host. A host-side wall-clock timeout
+  hard-kills the process, and captured stdout/stderr are byte-capped.
+- **Tamper-evident human review.** The tool is two-phase. Called without an
+  approval hash it runs in **preview** mode: it hashes the exact `*.py` code that
+  would execute (SHA-256), scans that code with `scan_injection`, and returns the
+  hash and the precise command that would run — but does **not** execute.
+  Execution requires re-invoking with `approved_code_sha256` equal to that hash;
+  if the code changed after review the hashes differ and the run is refused. The
+  hash and dataset/output paths are recorded as an analysis-run provenance row.
+  The `scan_injection` signal over both the source article and the generated code
+  prioritizes which syntheses need the closest human look.
 
 The honest position, stated in the paper, is that **the secure way to run
 possibly-malicious code is not to run it unreviewed**: we advise close
 inspection of synthesized analyses, and the sandbox above bounds the damage if
 review is imperfect.
+
+**Residual caveats.** `ulimit -v` caps virtual address space, which is
+conservative for memory-mapping libraries; it can be relaxed per run
+(`memory_mb`) if it interferes with a legitimate analysis. The sandbox confines
+execution but does not by itself judge scientific correctness — human review of
+the previewed code remains the primary control.
 
 ## 6. Residual risk and human-in-the-loop
 
