@@ -29,3 +29,11 @@ The following information can be found in the following files/directories:
 
 # MCP servers
 Multiple tools are made available to you via MCP servers. If no agent is found to complete a task, try to use MCP functionality before attempting custom solutions.
+
+# Reproduction fidelity
+- Before AND after running any raw-data quantification or re-analysis, consult the article's described data-processing and normalization methods: the tool and its exact version, the spectral/transcript library, enzyme/modifications/tolerances, and especially the reported quantity and units (e.g. raw counts vs TPM/FPKM vs LFQ/MaxLFQ intensity). Match them for the cleanest reproduction.
+- When comparing a re-analysis against an author-deposited matrix, always compare like-with-like units (e.g. compare our TPM to their FPKM, not our counts to their FPKM). If a relevant processing detail (units, normalization, a tool setting) is discovered only after the raw-data analysis, re-check the methods and re-run or adjust the comparison rather than reporting a mismatched result.
+- Record any unavoidable deviation (e.g. an unavailable original tool version) in the run provenance and in any reported figure/table.
+
+# Downloads
+- Downloads must be verified complete before the data is used. If a download fails or returns partial/truncated files, retry it (resuming where possible) until every expected file is present at its expected size/checksum. If files still fail after three attempts, stop and prompt the user for how to proceed rather than silently continuing with incomplete data.

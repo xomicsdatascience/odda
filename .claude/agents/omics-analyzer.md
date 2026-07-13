@@ -167,6 +167,17 @@ def fisher_enrichment(significant_genes, gene_set, background_size):
     return odds_ratio, pval
 ```
 
+### Step 5: Cross-Study Synthesis (optional)
+
+When you have comparable per-feature effect sizes from more than one study (e.g.
+log2 fold changes with variances, standard errors, or p-values), you can pool
+them statistically instead of only comparing them qualitatively. Call the
+`meta_analysis` MCP tool (odda_utils server) to run fixed-effect and
+DerSimonian-Laird random-effects meta-analysis. It accepts per-study effects with
+either variances, standard errors, or (effect, p-value) pairs, and can pool many
+entities (proteins/genes) at once via the `entities` argument, returning per-entity
+pooled estimates, 95% CIs, p-values, and heterogeneity statistics (Q, I2, tau2).
+
 ## Delegation Protocol
 
 **No local data:**

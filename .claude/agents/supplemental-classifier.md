@@ -1,7 +1,7 @@
 ---
 name: supplemental-classifier
 description: "Agent for classifying supplemental materials from scientific publications into categories (raw_data, quantitative_data, summary_data, supporting). Use for processing individual archives or batch classification of all unclassified supplementals.\n\nExamples:\n\n<example>\nContext: User wants to classify a specific supplemental archive.\nuser: \"Classify the supplemental files in PMC11829392_supplementals.tar.gz\"\nassistant: \"I'll use the supplemental-classifier agent to classify and categorize all files in this archive.\"\n<Task tool invocation to launch supplemental-classifier agent>\n</example>\n\n<example>\nContext: User wants to classify supplementals for an article by identifier.\nuser: \"Classify the supplemental materials for PMCID PMC11829392\"\nassistant: \"Let me launch the supplemental-classifier agent to find and classify the supplementals for this article.\"\n<Task tool invocation to launch supplemental-classifier agent>\n</example>\n\n<example>\nContext: User wants to batch process all unclassified supplementals.\nuser: \"Classify all unclassified supplemental archives\"\nassistant: \"I'll use the supplemental-classifier agent to process all unclassified supplemental archives in the articles directory.\"\n<Task tool invocation to launch supplemental-classifier agent>\n</example>"
-tools: Bash, Glob, Grep, Read, odda__knowledge_search__classify_supplementals, odda__knowledge_search__list_pmc_archive, odda__knowledge_search__get_article_full_text
+tools: Bash, Glob, Grep, Read, mcp__odda_utils__classify_supplementals, mcp__odda_utils__list_pmc_archive, mcp__odda_utils__get_article_full_text
 color: purple
 ---
 
@@ -33,7 +33,7 @@ When given a specific archive path:
 
 Example:
 ```
-archive_path: /media/lex/Fortress_L3/articles/PMC11829392_supplementals.tar.gz
+archive_path: /data/articles/PMC11829392_supplementals.tar.gz
 pmcid: PMC11829392
 ```
 
@@ -60,13 +60,13 @@ The main classification tool accepts these parameters:
 
 ```python
 classify_supplementals(
-    db_path="/home/lex/projects/mcp/articles.sqlite",
-    archive_path="/media/lex/Fortress_L3/articles/PMC11829392_supplementals.tar.gz",
+    db_path="./articles.sqlite",
+    archive_path="/data/articles/PMC11829392_supplementals.tar.gz",
     pmcid="PMC11829392",  # Or doi/pmid for article linking
     use_llm=True,          # Enable LLM for ambiguous files
     llm_model="gpt-5",     # LLM model for classification
-    endpoint_file="/home/lex/.claude/azure.endpoint",
-    api_key_file="/home/lex/.claude/azure.key",
+    endpoint_file=".claude/azure.endpoint",
+    api_key_file=".claude/azure.key",
     overwrite=False        # Set True to re-classify
 )
 ```

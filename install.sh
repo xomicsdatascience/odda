@@ -15,7 +15,11 @@ if ! "$PYTHON" -c "import sys; assert sys.version_info >= (3, 11)" 2>/dev/null; 
 fi
 
 # Check /data/ directories
-DATA_DIRS=("/data/articles" "/data/datasets" "/data/quantified" "/data/supporting" "/data/code")
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+    DATA_DIRS=("/c/data/articles" "/c/data/datasets" "/c/data/quantified" "/c/data/supporting" "/c/data/code")
+else
+    DATA_DIRS=("/data/articles" "/data/datasets" "/data/quantified" "/data/supporting" "/data/code")
+fi
 for dir in "${DATA_DIRS[@]}"; do
     if [ -d "$dir" ]; then
         echo "Warning: $dir already exists."
@@ -33,17 +37,19 @@ if [ ! -d "$VENV_DIR" ]; then
     echo "Creating virtual environment in $VENV_DIR..."
     "$PYTHON" -m venv "$VENV_DIR"
 fi
-
-source "$VENV_DIR/bin/activate"
-
+if [ -f "$VENV_DIR/Scripts/activate" ]; then
+    source "$VENV_DIR/Scripts/activate"
+else
+    source "$VENV_DIR/bin/activate"
+fi
 # Get dotnet for MaxQuant:
 mkdir -p odda_maxquant/static/apptainer/dotnet/
-wget https://download.visualstudio.microsoft.com/download/pr/dd6ee0c0-6287-4fca-85d0-1023fc52444b/874148c23613c594fc8f711fc0330298/dotnet-sdk-8.0.302-linux-x64.tar.gz -P odda_maxquant/static/apptainer/
+python -c 'import urllib.request; urllib.request.urlretrieve("https://download.visualstudio.microsoft.com/download/pr/dd6ee0c0-6287-4fca-85d0-1023fc52444b/874148c23613c594fc8f711fc0330298/dotnet-sdk-8.0.302-linux-x64.tar.gz", "odda_maxquant/static/apptainer/dotnet-sdk-8.0.302-linux-x64.tar.gz")'
 tar -xzf odda_maxquant/static/apptainer/dotnet-sdk-8.0.302-linux-x64.tar.gz -C odda_maxquant/static/apptainer/dotnet/
 rm odda_maxquant/static/apptainer/dotnet-sdk-8.0.302-linux-x64.tar.gz
 
 echo "Upgrading pip..."
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Install submodules and local packages in editable mode
 echo "Installing packages..."
