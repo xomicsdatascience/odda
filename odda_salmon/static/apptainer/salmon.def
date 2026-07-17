@@ -1,0 +1,29 @@
+Bootstrap: docker
+From: {{ OS }}:{{ OS_VERSION }}
+
+# Apptainer definition for Salmon RNA-seq quantification.
+# Embeds the self-contained Salmon linux binary (COMBINE-lab prebuilt "cli" dist).
+# Mirrors the DIA-NN / MaxQuant container pattern: a single tool binary on PATH
+# with a passthrough runscript, built per version by build_images.sh.
+
+%arguments
+    OS=ubuntu
+    OS_VERSION=22.04
+    SALMON_VERSION=2.3.3
+
+%files
+    salmon /usr/local/bin/salmon
+
+%environment
+    export LC_ALL=C
+    export PATH=${PATH}:/usr/local/bin
+
+%post
+    chmod +x /usr/local/bin/salmon
+    # record the version (used for dynamic version discovery / provenance)
+    echo "{{ SALMON_VERSION }}" > /salmon_version.txt
+    # sanity check that the binary runs inside the container
+    /usr/local/bin/salmon --version
+
+%runscript
+    exec /usr/local/bin/salmon "$@"

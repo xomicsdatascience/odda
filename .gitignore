@@ -1,0 +1,29 @@
+# --- Secrets / credentials (NEVER commit) ---
+.claude/*.key
+.claude/*.endpoint
+.claude/model.config
+.env
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.venv-*/
+venv/
+.pytest_cache/
+
+# --- Local data / large artifacts (regenerated; keep out of git) ---
+*.sqlite
+*.sqlite-journal
+
+# --- License-restricted tool binaries & built containers (must NOT be distributed) ---
+# (These live inside submodules, which have their own .gitignore; listed here as
+#  documentation of intent and a safety net for root-level git operations.)
+*.sif
+**/static/apptainer/DIA-NN-*.zip
+**/static/apptainer/MaxQuant_v*/
+**/static/apptainer/ThermoRawFileParser-*.zip
+**/static/apptainer/ThermoRawFileParser-*-linux/
+**/static/apptainer/dotnet/

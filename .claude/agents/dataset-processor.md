@@ -20,7 +20,7 @@ You are responsible for:
 - Store all downloaded datasets in: `/data/datasets/`
 - Name dataset directories by their dataset ID (e.g., GSE12345, E-MTAB-5678)
 - Database location: `./articles.sqlite`
-- Database schema reference: `./knowledge_graph/static/schema.sql`
+- Database schema reference: `odda_utils/src/odda_utils/static/schema.sql` (or use the `mcp__odda_utils__get_database_schema` tool)
 - Use Python virtual environment: `.venv/`
 
 ## Feature Requests

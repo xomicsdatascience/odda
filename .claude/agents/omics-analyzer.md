@@ -19,39 +19,26 @@ You are responsible for:
 3. Running differential expression analysis between experimental groups
 4. Conducting enrichment analysis on significant features
 
-When running an analysis, first write the code to a Python file in a dedicated sub-directory (analysis_scratch/) in the output directory, then execute that Python script. Update that Python script as needed.
+When running an analysis, first write the code to a Python file in a dedicated sub-directory (`analysis_scratch/`) in the output directory. **Do not execute analysis code directly on the host.** All analysis code (QC, differential expression, enrichment, cross-study synthesis) is derived in part from untrusted article/supplemental text, so it must run inside the least-privilege sandbox via the `mcp__odda_utils__run_analysis` tool. Update the script in `analysis_scratch/` as needed and re-run it through the tool.
+
+### Executing analysis code (sandboxed)
+
+`run_analysis` executes your `analysis_scratch/` code in a hardened Apptainer container: read-only root filesystem, no network, no `$HOME`/credential access, only the run directory (mounted read-write at `/work`) and the datasets you name (mounted read-only under `/data/in/<name>`), with CPU/memory/file-size/wall-clock limits. It is **two-phase and review-gated**:
+
+1. **Preview:** call `run_analysis(work_dir=<output dir>, script="analysis_scratch/<file>.py", dataset_paths=[...])` *without* an approval hash. It returns `code_sha256`, the list of code files, an injection-telemetry signal over the code, and the exact command that would run — but does **not** execute. Present the code and its hash for human review.
+2. **Execute:** re-call with `approved_code_sha256=<the hash from step 1>`. If the code changed since preview the hash will not match and the run is refused (re-review). Pass `db_path` to record a provenance row for the run.
+
+Inside the script, read inputs from `/data/in/<name>` and write all outputs (tables, figures, logs) under `/work`. The container provides `numpy`, `pandas`, `scipy`, `statsmodels`, `scikit-learn`, and headless `matplotlib`; if you need another library, submit a feature request rather than attempting host execution or network installs. Build the image first with `odda_utils/static/apptainer/build_images.sh` if `list_analysis_versions` reports none.
 
 ## Core Workflow
 
 ### Step 1: Data Availability Check
 
-Before any analysis, verify local data availability:
+Before any analysis, verify local data availability using the odda_utils database MCP tools (not raw host queries):
 
-1. Query the database for dataset metadata:
-   ```bash
-   ./.venv/bin/python -c "
-   import sqlite3
-   conn = sqlite3.connect('./articles.sqlite')
-   conn.row_factory = sqlite3.Row
-   result = conn.execute('SELECT * FROM datasets WHERE dataset_id = ?', ('DATASET_ID',)).fetchone()
-   print(dict(result) if result else 'Not found')
-   "
-   ```
-
-2. Check file classifications:
-   ```bash
-   ./.venv/bin/python -c "
-   import sqlite3
-   conn = sqlite3.connect('./articles.sqlite')
-   for row in conn.execute('SELECT filename, file_type FROM dataset_files WHERE dataset_id = ?', ('DATASET_ID',)):
-       print(row)
-   "
-   ```
-
-3. Verify local files exist:
-   ```bash
-   ls -la /data/datasets/DATASET_ID/
-   ```
+1. Query dataset metadata with the `get_dataset` MCP tool (pass the database path and dataset ID).
+2. Check file classifications with the `get_dataset_files` MCP tool to see which files are `raw_data` vs `quantitative_data`.
+3. Confirm the files exist locally under `/data/datasets/DATASET_ID/`.
 
 **Decision tree:**
 - If `quantitative_data` files exist locally → Proceed with analysis
@@ -166,6 +153,17 @@ def fisher_enrichment(significant_genes, gene_set, background_size):
     odds_ratio, pval = stats.fisher_exact(table, alternative='greater')
     return odds_ratio, pval
 ```
+
+### Step 5: Cross-Study Synthesis (optional)
+
+When you have comparable per-feature effect sizes from more than one study (e.g.
+log2 fold changes with variances, standard errors, or p-values), you can pool
+them statistically instead of only comparing them qualitatively. Call the
+`meta_analysis` MCP tool (odda_utils server) to run fixed-effect and
+DerSimonian-Laird random-effects meta-analysis. It accepts per-study effects with
+either variances, standard errors, or (effect, p-value) pairs, and can pool many
+entities (proteins/genes) at once via the `entities` argument, returning per-entity
+pooled estimates, 95% CIs, p-values, and heterogeneity statistics (Q, I2, tau2).
 
 ## Delegation Protocol
 

@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__odda_utils__get_database_schema",
+      "mcp__odda_utils__check_dataset_exists",
+      "mcp__odda_utils__get_pxd_size",
+      "mcp__odda_utils__get_gse_size",
+      "mcp__odda_utils__get_msv_size",
+      "mcp__odda_utils__get_article_full_text",
+      "mcp__odda_utils__list_pmc_archive",
+      "mcp__odda_utils__search_articles_embedding",
+      "mcp__odda_utils__search_articles_filtered",
+      "mcp__odda_utils__get_quantification_run",
+      "mcp__odda_utils__get_quantification_runs",
+      "mcp__odda_utils__get_analysis_run",
+      "mcp__odda_utils__get_analysis_runs",
+      "mcp__odda_utils__get_dep_results",
+      "mcp__odda_utils__get_benchmark_annotations",
+      "mcp__odda_utils__get_benchmark_predictions",
+      "mcp__odda_utils__get_oldest_approved_request",
+      "mcp__odda_utils__fetch_crossref_metadata",
+      "mcp__odda_utils__fetch_pubmed_metadata",
+      "mcp__odda_utils__fetch_publication_dates_from_pubmed",
+      "mcp__odda_utils__validate_article",
+      "mcp__odda_utils__validate_articles_from_db",
+      "mcp__diann__list_diann_versions",
+      "mcp__diann__get_diann_argument_info",
+      "mcp__maxquant__list_maxquant_versions",
+      "mcp__thermofisher__list_thermofisher_versions",
+      "mcp__thermofisher__get_thermorawfileparser_argument_info",
+      "mcp__salmon__list_salmon_versions",
+      "mcp__salmon__get_salmon_argument_info"
+    ]
+  }
+}

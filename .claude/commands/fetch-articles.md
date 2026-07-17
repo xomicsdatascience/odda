@@ -59,5 +59,5 @@ For any option the user selects to change, ask a follow-up question to get the n
 
 1. Assemble all parameters from the user's answers combined with the default values for anything not changed.
 2. Display a summary of the final configuration to the user before calling the tool. Warn that processing via LLMs can take some time and that no output will be visible.
-3. Dispatch to the most relevant agent, instructing it to call `mcp__odda__search_and_fetch` with the assembled parameters. If the user declined downloading, pass `download_dir` as `null`.
+3. Dispatch to the most relevant agent, instructing it to call `mcp__odda_utils__search_and_fetch` with the assembled parameters. If the user declined downloading, pass `download_dir` as `null`.
 4. After the call completes, report the results: articles found, processed, skipped, and any errors.
