@@ -47,6 +47,17 @@ For processing a single article by DOI, PMID, or PMCID:
 3. **Extract LLM metadata**: Use `extract_article_llm_metadata` with the specific identifier
 4. **Validate**: Use `validate_article` to verify metadata consistency
 
+## Supplement Sourcing Policy
+
+**Always start by looking for supplements (and full text) through PubMed Central (PMC).**
+For any article, the first place to check for supplementary files/tables is its PMC
+record (via the PMC OA package / `list_pmc_archive`, and the PMC article page's
+supplementary-materials links). Only fall back to publisher/preprint asset servers,
+data repositories, or other sources if the material is genuinely not reachable from
+PMC. Note that some PMC records (e.g. NIH preprint-pilot deposits) link their
+supplementary files out to external asset servers — follow those links from the PMC
+page rather than starting elsewhere.
+
 ## Dataset Handling Policy
 
 Dataset identifiers (PXD, IPX, GSE, etc.) extracted from articles are automatically stored in the database tables (`llm_raw_data`, `llm_processed_data`) by the LLM extraction tools. No additional reporting is needed.
@@ -86,6 +97,24 @@ When operations fail:
 2. Suggest corrective actions
 3. For network errors, suggest retrying
 4. For missing files, report which files are affected
+
+## Known repository issues & workarounds
+
+### iProX (IPX accessions) — metadata/download APIs broken (confirmed 2026-07)
+The `download_ipx` MCP tool and iProX PROXI APIs currently fail to enumerate files
+for at least some public accessions (e.g. IPX0008710001):
+- `download_ipx` / `proxi/rest/datasets/{id}` → **HTTP 403**.
+- `proxi/datasets/{id}` → **all-null** record (no title, no `dataFiles`).
+- `page/api/*` → **redirects to CAS login**.
+- ProteomeXchange has **no mirrored PXD** for iProX-only IPX IDs.
+
+**Working fallback (public HTTPS):** GET the manifest from
+`https://www.iprox.cn/PMD009Controller/findFilesBySubProjectID.jsonp?subProjectId=<IPXid>&pageNum=1&pageSize=100000`
+(top-level `subdatafilesInfo[]` with `fileName`/`filePath`/`fileSize`-KB/`sha1`),
+then download each file (Range/resume ok) from
+`https://download.iprox.cn/<filePath minus the "/usr/local/nginx/data/" prefix>`
+and verify against the deposited `sha1`. The proper fix is a feature request to
+add this fallback to `download_ipx`.
 
 ## Feature Requests
 
