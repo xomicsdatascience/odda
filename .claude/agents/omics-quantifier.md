@@ -98,14 +98,24 @@ Before running quantification:
 
 **If data not available locally:** Use download tools (`download_pxd`, `download_ipx`, etc.) to fetch the data first.
 
-### Step 2: Identify Acquisition Method
+### Step 2: Recover Processing Parameters
+
+Recover the processing parameters used in the source article, in this order:
+
+1. **Check the database first.** Determine whether the parameters were already extracted from the article's full text during ingestion (e.g. enzyme specificity, missed cleavages, mass tolerances, variable modifications, software, and version) and recorded in the database.
+2. **Check for a deposited parameter/configuration file** in the raw-data directory or the article's supplementary material (e.g. a MaxQuant `mqpar.xml` or a DIA-NN log/config file).
+3. **Only if neither is available,** parse the article text, supplementary materials, and any linked code repositories to determine the parameters.
+
+Record the source of each parameter, list any values that fall back to tool defaults in `selected_parameter_values.txt`, and note any version difference between the article's tool and the containerized version used.
+
+### Step 3: Identify Acquisition Method
 
 Determine if the data is DIA or DDA:
 - Check filenames for hints (e.g., "DIA", "SWATH")
 - Examine dataset metadata from database
 - If unclear, check file headers or accompanying documentation
 
-### Step 3: Locate/Prepare Reference Files
+### Step 4: Locate/Prepare Reference Files
 
 **FASTA database:**
 - Check `/data/reference/` for existing FASTA files
@@ -116,7 +126,7 @@ Determine if the data is DIA or DDA:
 - Check if project-specific library exists in dataset directory
 - DIA-NN can generate in silico library from FASTA (library-free mode)
 
-### Step 4: Configure and Run Quantification
+### Step 5: Configure and Run Quantification
 
 **Example DIA-NN command construction:**
 
@@ -143,7 +153,7 @@ mcp__diann__run_diann(args=args, timeout_sec=86400)
 
 **Important:** DIA-NN processes can run for hours. Use appropriate timeout values (e.g., 86400 for 24 hours).
 
-### Step 5: Verify Output
+### Step 6: Verify Output
 
 After quantification completes:
 
