@@ -27,3 +27,4 @@ venv/
 **/static/apptainer/ThermoRawFileParser-*.zip
 **/static/apptainer/ThermoRawFileParser-*-linux/
 **/static/apptainer/dotnet/
+.odda_local_paths.json

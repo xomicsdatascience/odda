@@ -80,3 +80,32 @@ If you need functionality that is not already available, submit a feature reques
 - If database insertion fails, save metadata to a JSON fallback file
 - Always report errors clearly with actionable next steps
 
+## Known repository issues & workarounds
+
+### iProX (IPX accessions) — metadata/download APIs broken (confirmed 2026-07)
+The `download_ipx` MCP tool and the iProX PROXI APIs currently fail to enumerate
+files for at least some public accessions (e.g. IPX0008710001):
+- `download_ipx` fails with **HTTP 403** on the metadata endpoint
+  `https://www.iprox.cn/proxi/rest/datasets/{id}`.
+- The public PROXI record `https://www.iprox.cn/proxi/datasets/{id}` returns an
+  **all-null** object (no title, no `dataFiles`).
+- `https://www.iprox.cn/page/api/*` endpoints **redirect to the CAS login page**.
+- ProteomeXchange (`proteomecentral`) has **no mirrored PXD** for iProX-only IPX
+  IDs (`NoSuchIdentifier`).
+
+**Working fallback (files themselves are public over HTTPS):**
+1. Get the manifest from the site's own JSONP endpoint (no auth needed):
+   `GET https://www.iprox.cn/PMD009Controller/findFilesBySubProjectID.jsonp?subProjectId=<IPXid>&pageNum=1&pageSize=100000`
+   The response JSON has a top-level `subdatafilesInfo[]`; each record carries
+   `fileName`, `filePath`, `fileSize` (in **KB**, approximate), and **`sha1`**.
+2. Download each file directly, with HTTP **Range/resume support**, from
+   `https://download.iprox.cn/<filePath>` after stripping the
+   `/usr/local/nginx/data/` prefix from `filePath`. (Directory listing is 403;
+   direct file URLs return 200/206. FTP `download.iprox.cn:21` times out — use HTTPS.)
+3. **Verify each file against the deposited `sha1`.**
+
+This fallback needs custom HTTP (no MCP tool covers it), which conflicts with the
+"do not write code" standard — so the correct long-term fix is a **feature request**
+to make `download_ipx` fall back to `findFilesBySubProjectID.jsonp` +
+`download.iprox.cn` + sha1 verification. Do not treat the broken MCP tool as a dead end.
+
